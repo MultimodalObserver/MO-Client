@@ -39,7 +39,7 @@ public class RemoteServer {
     private final int TIME_OUT = 50; // in ms (5 sec)
     protected MulticastSocket udpSocket;
     private InetAddress host;
-    
+    private static final int BUFFER_SIZE = 30720;
     public RemoteServer(String ip, int portTCP) throws IOException{
 //        System.setProperty("java.net.preferIPv4Stack" , "true");
         this.ip = ip;
@@ -52,15 +52,18 @@ public class RemoteServer {
         int trying = 0;
         clientSocket = new Socket();
         while(connecting){
-            try {System.out.println("INTENTO "+trying);
+            try {//System.out.println("INTENTO "+trying);
                 clientSocket.connect(new InetSocketAddress(ip, portTCP), TIME_OUT);
-                System.out.println("PASO ACA");
+                //System.out.println("PASO ACA");
                 connecting = false;
             } catch (IOException e) {
-                if(trying++ > 1) {System.out.println("NO PUDO"); break;}
+                if(trying++ > 1) {
+                    //System.out.println("NO PUDO"); 
+                    break;
+                }
             }
         }
-        System.out.println("SALIO con "+!connecting);
+        //System.out.println("SALIO con "+!connecting);
         return !connecting; // false = no pudo conectarse ; true = pudo establecer conexión
     }
     
@@ -83,7 +86,7 @@ public class RemoteServer {
             //System.out.println("Key: " + k + ": Value: " +(CaptureConfig) v);
             capturePlugins.put(k,(CaptureConfig) v);
         });
-        System.out.println("PLUGINS QUE LLEGARON"+capturePlugins);
+        //System.out.println("PLUGINS QUE LLEGARON"+capturePlugins);
         
         //CommunicationViewer.getInstance();//.establishedConnection();
   //      VisualizationStreamingStage vss = new VisualizationStreamingStage();
@@ -138,7 +141,7 @@ public class RemoteServer {
                     inputStream = new ObjectInputStream(clientSocket.getInputStream());
                     PetitionResponse response = (PetitionResponse)inputStream.readObject();
                     if(response != null){
-                        System.out.println(response);
+                        //System.out.println(response);
                         //Response auxResponse = response;
                         new Thread(new Runnable() {
                             @Override
@@ -193,15 +196,15 @@ public class RemoteServer {
                 send(r);
                 break;
             case Command.CHANGE_QUALITY_STREAMING:
-                System.out.println("Enviando "+r);
+                //System.out.println("Enviando "+r);
                 send(r);
                 break;
             case Command.STOP_STREAMING:
-                System.out.println("Enviando "+r);
+                //System.out.println("Enviando "+r);
                 send(r);
                 break;
             case Command.GET_PORTS_RESPONSE:
-                System.out.println("RECIBIENDO PUERTOS"+r);
+                //System.out.println("RECIBIENDO PUERTOS"+r);
                 portRTP = 0;// Integer.parseInt((String)r.getHashMap().get("portRTP"));
 //                new Thread(() -> {
 //                    listeningRTP();
@@ -210,15 +213,17 @@ public class RemoteServer {
                 portUDP = Integer.parseInt((String)r.getHashMap().get("portUDP"));
                 try {
 //                    System.setProperty("java.net.preferIPv4Stack" , "true");
-                    System.out.println("Socket udp antes: "+udpSocket);
-                    System.out.println("multicast ip: "+multicastIP);
+                    //System.out.println("Socket udp antes: "+udpSocket);
+                    //System.out.println("multicast ip: "+multicastIP);
+                    //System.out.println("puerto UDP: "+portUDP);
                     udpSocket = new MulticastSocket(portUDP);
-                    System.out.println("Socket udp despues: "+udpSocket);
+                    //System.out.println("Socket udp despues: "+udpSocket);
                     host = InetAddress.getByName(multicastIP);
                     udpSocket.joinGroup(host);
-                    System.out.println("se unió");
+                    //System.out.println("se unió");
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                    return;
                 }
                 new Thread(() -> {
                     listeningUDP();
@@ -232,7 +237,7 @@ public class RemoteServer {
 //                ClientConnection.getInstance().getChat().insertMsg(entry);
 //                break;
             default:
-                System.out.println("Notificando "+r);
+                //System.out.println("Notificando "+r);
                 if(ClientConnection.getInstance().getListeners() != null){
                     for(ConnectionListener cl :ClientConnection.getInstance().getListeners()){
                         if(cl!=null)
@@ -252,27 +257,30 @@ public class RemoteServer {
             1. TODO: comprobar fuente
             2. Reproducir
             */
-            byte[] buffer = new byte[2048];
+            byte[] buffer = new byte[BUFFER_SIZE];
             DatagramPacket incomingPacket = new DatagramPacket(buffer, buffer.length);
             Thread.sleep(2000);
             while(true){
                 try {
                     udpSocket.receive(incomingPacket);
+                    //System.out.println("Recibi contenido!!");
                     byte[] data = incomingPacket.getData();
                     ObjectInputStream iStream = new ObjectInputStream(new ByteArrayInputStream(data));
                     PetitionResponse response = (PetitionResponse) iStream.readObject();
                     if(response != null){
-                        System.out.println(response);
+                        //System.out.println(response);
                         //Response auxResponse = response;
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                System.out.println("ESTA RESPUESTA DA NULO; "+response);
+                                //System.out.println("ESTA RESPUESTA DA NULO; "+response);
                                 handlerUDP(response);
                             }
                         }).start();
                     }
-                } catch (IOException | ClassNotFoundException ex) {}
+                } catch (IOException | ClassNotFoundException ex) {
+                    Logger.getLogger(RemoteServer.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         } catch (InterruptedException ex) {
             Logger.getLogger(RemoteServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -288,7 +296,7 @@ public class RemoteServer {
             case Command.GET_ACTIVE_PLUGINS_RESPONSE:
                 r.getHashMap();
             default:
-                System.out.println("Cliente recibe ->\n"+r);
+                //System.out.println("Cliente recibe ->\n"+r);
             try {
                 for(ConnectionListener c: ClientConnection.getInstance().getListeners())
                     c.onMessageReceived(ClientConnection.getInstance(), r);

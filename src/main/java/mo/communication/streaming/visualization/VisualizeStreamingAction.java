@@ -4,6 +4,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.communication.ClientConnection;
@@ -16,14 +17,7 @@ import mo.core.ui.dockables.DockablesRegistry;
 import mo.organization.Configuration;
 
 public class VisualizeStreamingAction {
-
-    public static void main(String[] args) {
-        
-    }
-    
-    public String getName() {
-        return "Streaming";
-    }
+ 
     private List<VisualizationStreamingProvider> plugins;
     private List<VisualizationDirectStreamingProvider> directPlugins;
     
@@ -32,13 +26,17 @@ public class VisualizeStreamingAction {
         /*
         detecta plugins
         */
-        plugins = new ArrayList<>();
+        this.plugins = new ArrayList<>();
         for (Plugin plugin : PluginRegistry.getInstance().getPluginData().getPluginsFor("mo.communication.streaming.visualization.VisualizationStreamingProvider")) {
             VisualizationStreamingProvider p = (VisualizationStreamingProvider) plugin.getNewInstance();
-            plugins.add(p);
+            System.out.println("Plugin de visualización remota detectado: "+ p.getName());
+            this.plugins.add(p);
         }
         
-        
+        if(this.plugins.isEmpty()){
+            System.out.println("Lista de plugins de visualización remota vacía");
+            return;
+        }
         
         /*
         inicializa configuraciones de acuerdo a cada plugin
@@ -46,7 +44,29 @@ public class VisualizeStreamingAction {
         //ArrayList<Configuration> configs = new ArrayList<>();
         System.out.println("ESTE METODO INICIO CON:\n"+capturePlugins);
         ArrayList<VisualizableStreamingConfiguration> configs = new ArrayList<>();
-        for (VisualizationStreamingProvider plugin : getPlugins()) {
+        for (VisualizationStreamingProvider plugin : this.plugins) {
+            List<String> list = plugin.getCompatibleCreators();
+            System.out.println("ESTA ES LA LISTA"+list);
+            for (Map.Entry<String, CaptureConfig> entry: capturePlugins.entrySet()){
+                 CaptureConfig config = (CaptureConfig) entry.getValue();
+                 if(list.contains(config.getCreator())){
+                     System.out.println("ENTRO AL IF");
+                    Configuration c = plugin.initNewStreamingConfiguration(config);
+                    configs.add((VisualizableStreamingConfiguration)c);
+                    try {
+                        if(c instanceof ConnectionListener){
+                            //((ConnectionListener)c).subscribeToConnection(ClientConnection.getInstance());
+                            ClientConnection.getInstance().subscribeListener((ConnectionListener) c);
+                        }
+                        if(c instanceof ConnectionSender){
+                            ((ConnectionSender)c).subscribeListener(ClientConnection.getInstance());
+                        }
+                    } catch (UnknownHostException ex) {
+                        ex.printStackTrace();
+                    }
+                 }
+            }
+            /*
             capturePlugins.forEach((k,v)->{
                 //System.out.println(plugin.getCompatibleCreators().contains(v.getCreator()));
                 List<String> list = plugin.getCompatibleCreators();
@@ -64,9 +84,12 @@ public class VisualizeStreamingAction {
                         if(c instanceof ConnectionSender){
                             ((ConnectionSender)c).subscribeListener(ClientConnection.getInstance());
                         }
-                    } catch (UnknownHostException ex) {}
+                    } catch (UnknownHostException ex) {
+                    
+                    }
                 }
             });
+            */
         }
         
         /*
@@ -156,7 +179,7 @@ public class VisualizeStreamingAction {
         } catch (UnknownHostException ex) {}
     }
     public List<VisualizationStreamingProvider> getPlugins() {
-        return plugins;
+        return this.plugins;
     }
     
     public List<VisualizationDirectStreamingProvider> getDirectPlugins() {

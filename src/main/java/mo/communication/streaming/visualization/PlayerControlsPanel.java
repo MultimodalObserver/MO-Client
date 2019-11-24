@@ -244,4 +244,9 @@ public class PlayerControlsPanel implements ConnectionListener{
             
         }
     }
+
+    @Override
+    public void subscribeToConnection(ClientConnection cc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

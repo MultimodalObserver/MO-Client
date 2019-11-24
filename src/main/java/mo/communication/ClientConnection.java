@@ -152,10 +152,12 @@ public class ClientConnection implements ConnectionSender, ConnectionListener{
         if (listeners == null)
             listeners = new ArrayList<>();
         listeners.add(c);
+        /*
         if(c instanceof VisualizableStreamingConfiguration)
             System.out.println("Se ha suscrito uno más de nombre: "+((VisualizableStreamingConfiguration)c).getId());
         if(c instanceof CommunicationConfiguration)
             System.out.println("Se ha suscrito uno más de nombre: "+((CommunicationConfiguration)c).toString());
+        */
     }
 
     @Override
@@ -186,5 +188,10 @@ public class ClientConnection implements ConnectionSender, ConnectionListener{
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(ClientConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    @Override
+    public void subscribeToConnection(ClientConnection cc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

@@ -313,4 +313,9 @@ public class ChatWindow implements CommunicationConfiguration, ConnectionListene
             }
         }).start();
     }
+
+    @Override
+    public void subscribeToConnection(ClientConnection cc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
