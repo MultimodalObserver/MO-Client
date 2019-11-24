@@ -184,7 +184,6 @@ public class Plugin {
         
         if(getDependencies() == null) {System.out.println("sanityCheck: 1");return false;}
         for(Dependency dep : getDependencies()){
-        
             if(dep == null) {System.out.println("sanityCheck: 2");return false;}
             if(dep.getExtensionPoint() == null) {System.out.println("sanityCheck: 3");return false;}
             System.out.println(dep.getExtensionPoint().getId());
